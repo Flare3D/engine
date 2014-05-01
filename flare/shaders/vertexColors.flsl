@@ -11,7 +11,7 @@ technique main
 {
 	output fragment;
 	#if ( level != 1 )
-		fragment = interpolate( getColor( channel ) * level );
+		fragment = getColor( channel ) * level;
 	#else
-		fragment = interpolate( getColor( channel ) );
+		fragment = getColor( channel );
 }
