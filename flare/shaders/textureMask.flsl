@@ -9,19 +9,19 @@ sampler2D texture <order = 2>;
 param float threshold <order = 3> = 0.5;
 param float2 offset <order = 4> = 0;
 param float2 repeat <order = 5> = 1;
-param bool 
+
 technique main {
 	
 	float4 out;
 	
 	#if ( repeat != 1 && offset != 0 ) 
-		out = sampler2D( texture, interpolate( getUV( channel ) * repeat + offset ) );
+		out = sampler2D( texture, getUV( channel ) * repeat + offset );
 	#else if ( repeat != 1 ) 
-		out = sampler2D( texture, interpolate( getUV( channel ) * repeat ) );
+		out = sampler2D( texture, getUV( channel ) * repeat );
 	#else if ( offset != 0 ) 
-		out = sampler2D( texture, interpolate( getUV( channel ) + offset ) );
+		out = sampler2D( texture, getUV( channel ) + offset );
 	#else 
-		out = sampler2D( texture, interpolate( getUV( channel ) ) );	
+		out = sampler2D( texture, getUV( channel ) );	
 	
 	#if ( component == 0 )
 		kill( out.a - threshold );

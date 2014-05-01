@@ -9,5 +9,4 @@ technique main
 {
 	specular.rgb = powerLevel.y;
 	power = powerLevel.x;
-	//specular.a = powerLevel.x;
 }
