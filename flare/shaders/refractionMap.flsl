@@ -1,0 +1,28 @@
+
+#dependences false;
+
+use namespace flare;
+
+const float2 m = float2( 0.5, -0.5 );
+
+float4 refractionMap( samplerCube texture, float eta ) {
+	interpolated float3 iReflection = refract( normalize( vwPosition - camPos ), vwNormal, eta );
+	return samplerCube( texture, iReflection );
+}
+
+float4 refractionMap( sampler2D texture, float eta ) {
+	interpolated float2 iReflection = refract( normalize( vwPosition - camPos ), vwNormal, eta ).xy * m + 0.5;
+	return sampler2D( texture, iReflection );
+}
+
+float4 perPixelRefractionMap( samplerCube texture, float eta ) {
+	#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+	interpolated float3 v = vwPosition - camPos;
+	return samplerCube( texture, refract( normalize( v ), fwNormal, eta ) );
+}
+
+float4 perPixelRefractionMap( sampler2D texture, float eta ) {
+	#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+	interpolated float3 v = vwPosition - camPos;
+	return sampler2D( texture, refract( normalize(v), fwNormal, eta ).xy * m + 0.5 );
+}

@@ -1,0 +1,10 @@
+
+#dependences false;
+
+param float4 multiplier = 1;
+param float4 offset = 0;
+
+float4 colorTransform( float4 src )
+{
+	return src * multiplier + offset;
+}

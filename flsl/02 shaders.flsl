@@ -1,0 +1,194 @@
+// ================================================================================
+//
+//	FLARE3D S.A.
+//	Copyright 2011 Flare3D S.A.
+//	All Rights Reserved.
+//
+//	NOTICE: Flare3D permits you to use, modify, and distribute this file
+//	in accordance with the terms of the license agreement accompanying it.
+//
+// ================================================================================
+
+#dependences false;
+
+namespace flare 
+{
+	input NORMAL normal;
+	input POSITION position;
+	input UV0 uv0;
+	input UV1 uv1;
+	input UV2 uv2;
+	input UV3 uv3;
+	input COLOR0 color0;
+	input COLOR1 color1;
+	input COLOR2 color2;
+	input SKIN_WEIGHTS weights;
+	input SKIN_INDICES indices;
+	input TANGENT tangent;
+	input BITANGENT bitangent;
+
+	param VIEW view;
+	param WORLD world;
+	param WORLD_VIEW worldView;
+	param WORLD_VIEW_PROJ worldViewProj;
+	param VIEW_PROJ viewProj;
+	param PROJ proj;
+	param CAM_POS camPos;
+	
+	// vertex world position.
+	float3 vwPosition;
+	// vertex world normal.
+	float3 vwNormal;
+	// fragment world normal.
+	float3 fwNormal;
+	// interpolated world normal.
+	interpolated float3 iwNormal;
+	
+	// uv channels.
+	interpolated float2 iUV0 = uv0;
+	interpolated float2 iUV1 = uv1;
+	interpolated float2 iUV2 = uv2;
+	interpolated float2 iUV3 = uv3;
+	// color channels.
+	interpolated float4 iColor0 = color0.xyzw;
+	interpolated float4 iColor1 = color1.xyzw;
+	interpolated float4 iColor2 = color2.xyzw;
+	
+	// tbn matrix used for normal maps.
+	interpolated float3x3 TBN;
+
+	namespace blendMode
+	{
+		float4 mix( float4 a, float4 b, float4 value ) { return a * value + b * ( 1 - value ); }
+		float4 mix( float4 a, float4 b, float value ) { return a * value + b * ( 1 - value ); }	
+		float4 base( float4 a, float4 b ) { return a }
+		float4 normal( float4 a, float4 b ) { return a * a.w + b * ( 1 - a.w ) };
+		float4 add( float4 a, float4 b ) { return a + b; }
+		float4 subtract( float4 a, float4 b ) { return float4( max( b - a, 0 ).xyz, 1 ); }
+		float4 multiply( float4 a, float4 b ) { return a * b; }
+		float4 divide( float4 a, float4 b ) { return a / b; }
+		float4 lighten( float4 a, float4 b ) { return max( a, b ); }
+		float4 screen( float4 a, float4 b ) { return 1 - ( 1 - a ) * ( 1 - b ); }
+		float4 darken( float4 a, float4 b ) { return min( a, b ); }
+		float4 difference( float4 a, float4 b ) { return max( a, b ) - min( a, b ); }
+		float4 invert( float4 a ) { return 1 - a }
+		float4 invert( float4 a, float4 b ) { return 1 - a }
+		float4 alpha( float4 a, float4 b ) { return b * a.w; }
+		float4 erase( float4 a, float4 b ) { return b - a.w; }
+		float4 overlay( float4 a, float4 b ) {
+			float4 i = (a >= 0.5);
+			float4 s = 2 * a * b;
+			float4 d = 1.0 - 2.0 * (1.0 - b) * (1.0 - a);
+			return s * i + d * ( 1 - i );
+		}
+		float4 hardlight( float4 a, float4 b ) {
+			float4 i = (a < 0.5);
+			float4 s = 2 * a * b;
+			float4 d = 1.0 - 2.0 * (1.0 - b) * (1.0 - a);
+			return s * i + d * ( 1 - i );
+		}
+		float4 average( float4 a, float4 b ) { return ( a + b ) * 0.5; }
+		float4 source( float4 a, float4 b ) { return a }
+		float4 dest( float4 a, float4 b ) { return b }
+	}
+	
+	namespace transforms
+	{
+		float4 transform() {
+			vwNormal = normalize( normal * world.xyz );
+			iwNormal = vwNormal;
+			vwPosition = (position.xyz * world).xyz;
+			return position.xyzw * worldViewProj;
+		}
+		
+		float4 skin1() {
+			param BONES bones[102]; // 34 bones, float4x3 each one.	
+			vwNormal = mul3x3( normal, bones[indices.x].xyz ) * weights.x;
+			vwNormal = normalize( vwNormal * world.xyz );
+			vwPosition = mul3x4( position.xyzw, bones[indices.x] ) * weights.x;
+			float4 w = float4( vwPosition, 1 ) * world;
+			vwPosition = w.xyz;
+			iwNormal = vwNormal;
+			return w * viewProj;
+		}
+		
+		float4 skin2() {
+			param BONES bones[102]; // 34 bones, float4x3 each one.	
+			vwNormal = mul3x3( normal, bones[ indices.x ].xyz ) * weights.x
+			vwNormal += mul3x3( normal, bones[ indices.y ].xyz ) * weights.y;
+			vwNormal = normalize( vwNormal * world.xyz );
+			vwPosition = mul3x4( position.xyzw, bones[ indices.x ] ) * weights.x;
+			vwPosition += mul3x4( position.xyzw, bones[ indices.y ] ) * weights.y;
+			float4 w = float4( vwPosition, 1 ) * world;
+			vwPosition = w.xyz;
+			iwNormal = vwNormal;
+			return w * viewProj;
+		}
+		
+		float4 skin3() {
+			param BONES bones[102]; // 34 bones, float4x3 each one.	
+			vwNormal = mul3x3( normal, bones[ indices.x ].xyz ) * weights.x; 
+			vwNormal += mul3x3( normal, bones[ indices.y ].xyz ) * weights.y;
+			vwNormal += mul3x3( normal, bones[ indices.z ].xyz ) * weights.z;
+			vwNormal = normalize( vwNormal * world.xyz );
+			vwPosition = mul3x4( position.xyzw, bones[ indices.x ] ) * weights.x;
+			vwPosition += mul3x4( position.xyzw, bones[ indices.y ] ) * weights.y;
+			vwPosition += mul3x4( position.xyzw, bones[ indices.z ] ) * weights.z;
+			float4 w = float4( vwPosition, 1 ) * world;
+			vwPosition = w.xyz;
+			iwNormal = vwNormal;
+			return w * viewProj;
+		}
+		
+		float4 skin4() {
+			param BONES bones[102]; // 34 bones, float4x3 each one.	
+			vwNormal = mul3x3( normal, bones[ indices.x ].xyz ) * weights.x;
+			vwNormal += mul3x3( normal, bones[ indices.y ].xyz ) * weights.y;
+			vwNormal += mul3x3( normal, bones[ indices.z ].xyz ) * weights.z;
+			vwNormal += mul3x3( normal, bones[ indices.w ].xyz ) * weights.w;
+			vwNormal = normalize( vwNormal * world.xyz );
+			vwPosition = mul3x4( position.xyzw, bones[ indices.x ] ) * weights.x;
+			vwPosition += mul3x4( position.xyzw, bones[ indices.y ] ) * weights.y;
+			vwPosition += mul3x4( position.xyzw, bones[ indices.z ] ) * weights.z;
+			vwPosition += mul3x4( position.xyzw, bones[ indices.w ] ) * weights.w;
+			float4 w = float4( vwPosition, 1 ) * world;
+			vwPosition = w.xyz;
+			iwNormal = vwNormal;
+			return w * viewProj;
+		}
+	}
+	
+	namespace lights
+	{
+		// force to un-initialize.
+		float4 selfColor = null;
+		float3 specular = null;
+		float1 power = null;
+		float4 lightMap = null;
+		
+		bool fog = true;
+	}
+	
+	float4 undefined() { return (0.6).xxxx; }
+	
+	void setVertex( float4 v ) {
+		output vertex = v;
+	}
+	void setFragment( float4 v ) {
+		output fragment = v;
+	}
+	
+	float2 getUV( float c ) {
+			#if ( c == 0 ) return iUV0;
+	   #else if ( c == 1 ) return iUV1;
+	   #else if ( c == 2 ) return iUV2;
+	   #else if ( c == 3 ) return iUV3;
+	   return uv0;
+	}
+	float4 getColor( float c ) {
+			#if ( c == 0 ) return iColor0.xyzw;
+	   #else if ( c == 1 ) return iColor1.xyzw;
+	   #else if ( c == 2 ) return iColor2.xyzw;
+	   return color0.xyzw;
+	}
+}

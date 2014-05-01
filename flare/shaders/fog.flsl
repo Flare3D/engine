@@ -1,0 +1,24 @@
+
+#dependences false;
+
+use namespace flare;
+
+param CAM_POS camPos;
+param float4 color <ui = "color"> = 1;
+param float2 nearFar = float2( 0, 1000 );
+
+technique perVertex
+{
+	float fac = ( dot( float4(vwPosition, 1), view[2] ) - nearFar.x ) / ( nearFar.y - nearFar.x );
+	
+	interpolated float4 iFog = saturate(fac) * color;
+	
+	output fragment = iFog;
+}
+
+technique perPixel
+{
+	interpolated float4 ivwPosition = float4( vwPosition, 1 );
+	
+	output fragment = ( dot( ivwPosition, view[2] ) - nearFar.x ) / ( nearFar.y - nearFar.x ) * color;
+}

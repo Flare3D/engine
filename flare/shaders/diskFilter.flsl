@@ -1,0 +1,72 @@
+
+use namespace flare;
+use namespace flare.transforms;
+
+param sampler2D texture <wrap = 0, mip = 0, filter = 1>;
+param float2 texel = 10 / 1024;
+
+const float2 disk10[10];
+disk10[0] = float2( -0.5923331, 0.6954394 );
+disk10[1] = float2( 0.2430052, 0.6915374 );
+disk10[2] = float2( -0.8756757, -0.1931903 );
+disk10[3] = float2( -0.1695871, 0.2426501 );
+disk10[4] = float2( 0.8414993, 0.3904082 );
+disk10[5] = float2( 0.08591233, -0.2610335 );
+disk10[6] = float2( 0.754741, -0.1331456 );
+disk10[7] = float2( -0.3850068, -0.5943777 );
+disk10[8] = float2( 0.04389338, -0.9606743 );
+disk10[9] = float2( 0.4344995, -0.6341335 );
+
+const float2 disk6[6];
+disk6[0] = float2( -0.07966673, -0.1360016 );
+disk6[1] = float2( 0.1273306, 0.6211894 );
+disk6[2] = float2( 0.6842474, 0.473487 );
+disk6[3] = float2( 0.5800907, -0.4429736 );
+disk6[4] = float2( -0.6346393, 0.6612369 );
+disk6[5] = float2( -0.5390476, -0.6667983 );
+
+float4 getSamples6( float2 d )
+{
+	float4 fv
+	fv  = sampler2D( texture, iUV0 - disk6[0] * d );
+	fv += sampler2D( texture, iUV0 - disk6[1] * d );
+	fv += sampler2D( texture, iUV0 - disk6[2] * d );
+	fv += sampler2D( texture, iUV0 - disk6[3] * d );
+	fv += sampler2D( texture, iUV0 - disk6[4] * d );
+	fv += sampler2D( texture, iUV0 - disk6[5] * d ); 
+	fv /= 6;
+	return fv;
+}
+
+float4 getSamples10( float2 d )
+{
+	float4 fv
+	fv  = sampler2D( texture, iUV0 - disk10[0] * d );
+	fv += sampler2D( texture, iUV0 - disk10[1] * d );
+	fv += sampler2D( texture, iUV0 - disk10[2] * d );
+	fv += sampler2D( texture, iUV0 - disk10[3] * d );
+	fv += sampler2D( texture, iUV0 - disk10[4] * d );
+	fv += sampler2D( texture, iUV0 - disk10[5] * d ); 
+	fv += sampler2D( texture, iUV0 - disk10[6] * d );
+	fv += sampler2D( texture, iUV0 - disk10[7] * d );
+	fv += sampler2D( texture, iUV0 - disk10[8] * d );
+	fv += sampler2D( texture, iUV0 - disk10[9] * d );
+	fv /= 10;
+	return fv;
+}
+
+technique main 
+{
+	output depthWrite = false;
+	output depthCompare = "always";
+	output sourceFactor = "one";
+	output destFactor = "zero";
+	
+	output vertex = position.xyzw;
+	
+	float4 av = sampler2D( texture, iUV0 );
+	float p = 1 - av.w;
+	float2 d = texel * p;
+	
+	output fragment = float4( getSamples6( d ).rgb, 1 );
+}

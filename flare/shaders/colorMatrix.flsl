@@ -1,0 +1,13 @@
+
+#dependences false;
+
+param float4 matrix[4];
+matrix[0] = float4( 1, 0, 0, 0 );
+matrix[1] = float4( 0, 1, 0, 0 );
+matrix[2] = float4( 0, 0, 1, 0 );
+matrix[3] = float4( 0, 0, 0, 1 );
+
+float4 colorMatrix( float4 src, float4 dest )
+{
+	return src * matrix;
+}

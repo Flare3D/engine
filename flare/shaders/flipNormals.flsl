@@ -1,0 +1,12 @@
+
+#dependences false;
+
+use namespace flare;
+
+param float factor = -1;
+
+technique main 
+{
+	vwNormal = vwNormal * factor;
+	iwNormal = vwNormal;
+}

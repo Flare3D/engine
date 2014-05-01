@@ -1,0 +1,23 @@
+
+sampler2D texture <wrap = 0, mip = 0>;
+sampler2D compressed <wrap = 0, mip = 0, format = FORMAT_COMPRESSED>;
+
+param WORLD_VIEW_PROJ wvp;
+input POSITION pos;
+input UV0 uv;
+
+interpolated float2 iuv = uv;
+
+output vertex = pos.xyzw * wvp;
+output depthWrite = false;
+output depthCompare = "always";
+output sourceFactor = "sourceAlpha";
+output destFactor = "oneMinusSourceAlpha";
+
+technique main {
+	output fragment = sampler2D( texture, iuv );
+}
+
+technique mainCompressed {
+	output fragment = sampler2D( compressed, iuv );
+}

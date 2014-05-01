@@ -1,0 +1,11 @@
+
+#dependences false;
+
+param float threshold = 0.5;
+
+float4 alphaMask( float4 src, float4 dest )
+{
+	kill( src.a - threshold );
+	
+	return dest;
+}

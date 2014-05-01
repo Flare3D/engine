@@ -1,0 +1,13 @@
+
+#dependences false;
+
+use namespace flare.lights;
+
+param float2 powerLevel;
+
+technique main 
+{
+	specular.rgb = powerLevel.y;
+	power = powerLevel.x;
+	//specular.a = powerLevel.x;
+}

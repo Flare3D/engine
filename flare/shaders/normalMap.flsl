@@ -1,0 +1,41 @@
+
+#dependences false;
+
+use namespace flare;
+
+param float channel <ui = "list:0,1,2,3" order = 0> = 0;
+sampler2D texture <order = 1>;
+
+param bool invertX <ui = "bool" order = 2> = false;
+param bool invertY <ui = "bool" order = 3> = false;
+param float2 offset <order = 4> = 0;
+param float2 repeat <order = 5> = 1;
+
+technique main
+{
+	float4 bump;
+	
+	#if ( repeat != 1 && offset != 0 ) 
+		bump = sampler2D( texture, getUV( channel ) * repeat + offset );
+	#else if ( repeat != 1 ) 
+		bump = sampler2D( texture, getUV( channel ) * repeat );
+	#else if ( offset != 0 ) 
+		bump = sampler2D( texture, getUV( channel ) + offset );
+	#else 
+		bump = sampler2D( texture, getUV( channel ) );	
+
+	#if ( invertX && invertY )
+		bump.xy = 1 - bump.xy;
+	#else if ( invertX )
+		bump.x = 1 - bump.x;
+	#else if ( invertY )
+		bump.y = 1 - bump.y;
+		
+	bump *= 2;
+	bump -= 1;
+	
+	interpolated float3 iwTangent =  normalize(tangent * world.xyz); 
+	interpolated float3 iwBinormal =  normalize(bitangent * world.xyz);
+	
+	fwNormal = normalize( iwNormal * bump.z + bump.x * iwTangent + bump.y * iwBinormal );
+}

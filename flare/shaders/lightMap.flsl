@@ -1,0 +1,13 @@
+
+#dependences false;
+
+use namespace flare;
+use namespace flare.lights;
+
+param float channel <ui = "list:0,1,2,3" order = 0> = 3;
+sampler2D texture <order = 1>;
+
+technique main
+{
+	lightMap = sampler2D( texture, getUV( channel ) );
+}

@@ -1,0 +1,17 @@
+
+#dependences false;
+
+use namespace flare;
+
+technique main
+{
+	float4 perPixelReflectionMap( samplerCube texture ) {
+		#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+		interpolated float3 ifwPosition = vwPosition;
+		return samplerCube( texture, reflect( ifwPosition - camPos, fwNormal.xyz ) );
+	}
+	
+	samplerCube texture;
+	param float level = 1;	
+	output fragment = perPixelReflectionMap( texture ) * level;
+}

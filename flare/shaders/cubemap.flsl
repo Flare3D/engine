@@ -1,0 +1,20 @@
+
+#dependences false;
+
+samplerCube texture;
+
+param float level = 1;
+
+use namespace flare;
+
+technique normalCube
+{
+	float4 perPixelCubeMap( samplerCube texture ) {
+		#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+		return samplerCube( texture, fwNormal.xyz );
+	}
+	float4 c = perPixelCubeMap( texture );
+	#if ( level != 1 )
+		c *= level;
+	output fragment = c;
+}

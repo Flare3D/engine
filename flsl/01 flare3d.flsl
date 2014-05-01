@@ -1,0 +1,347 @@
+// ================================================================================
+//
+//	FLARE3D S.A.
+//	Copyright 2011 Flare3D S.A.
+//	All Rights Reserved.
+//
+//	NOTICE: Flare3D permits you to use, modify, and distribute this file
+//	in accordance with the terms of the license agreement accompanying it.
+//
+// ================================================================================
+
+#topLevel;
+
+#define PI 3.141592653589793;
+#define PI2 6.283185307179586;
+
+// there isn't a real boolean values in flsl.
+#define bool float;
+#define false 0.0
+#define true 1.0
+
+#define float1 float;
+
+#define FORMAT_RGBA 0;
+#define FORMAT_COMPRESSED 1;
+#define FORMAT_COMPRESSED_ALPHA 2;
+#define WRAP_CLAMP 0;
+#define WRAP_REPEAT 1;
+#define MIP_NONE 0;
+#define MIP_NEAREST 1;
+#define MIP_LINEAR 2;
+#define FILTER_NEAREST 0;
+#define FILTER_LINEAR 1;
+
+#semantic WORLD_VIEW_PROJ float4x4;
+#semantic WORLD_VIEW float4x4;
+#semantic VIEW_PROJ float4x4;
+#semantic PROJ float4x4;
+#semantic WORLD float4x4;
+#semantic IWORLD float4x4;
+#semantic VIEW float4x4;
+#semantic CAMERA float4x4;
+
+#semantic POSITION float3;
+#semantic NORMAL float3;
+#semantic TANGENT float3;
+#semantic BITANGENT float3;
+#semantic SKIN_WEIGHTS float2;
+#semantic SKIN_INDICES float2;
+#semantic PARTICLE float4;
+#semantic UV0 float2;
+#semantic UV1 float2;
+#semantic UV2 float2;
+#semantic UV3 float2;
+#semantic COLOR0 float3;
+#semantic COLOR1 float3;
+#semantic COLOR2 float3;
+#semantic TARGET_POSITION float3;
+#semantic TARGET_NORMAL float3;
+
+#semantic INPUT0 float4;
+#semantic INPUT1 float4;
+#semantic INPUT2 float4;
+#semantic INPUT3 float4;
+#semantic INPUT4 float4;
+#semantic INPUT5 float4;
+#semantic INPUT6 float4;
+#semantic INPUT7 float4;
+#semantic INPUT8 float4;
+#semantic INPUT9 float4;
+#semantic INPUT10 float4;
+#semantic INPUT11 float4;
+#semantic INPUT12 float4;
+#semantic INPUT13 float4;
+#semantic INPUT14 float4;
+#semantic INPUT15 float4;
+#semantic INPUT16 float4;
+
+// globals.
+#semantic BONES float4;
+#semantic DIR_LIGHT float4;
+#semantic DIR_COLOR float4;
+#semantic POINT_LIGHT float4;
+#semantic POINT_COLOR float4;
+#semantic TARGET_TEXTURE sampler2D;
+
+// additional.
+#semantic TIME float4;
+#semantic COS_TIME float4;
+#semantic SIN_TIME float4;
+#semantic MOUSE float4;
+#semantic CAM_POS float3;
+#semantic VIEWPORT float4;
+#semantic NEAR_FAR float4;
+#semantic RANDOM float4;
+ 
+float4 float4( float a ) { 
+	return a.xxxx 
+}
+float4 float4( float a, float b, float c, float d ) {
+	float4 t;
+	t.x = a;
+	t.y = b;
+	t.z = c;
+	t.w = d;
+	return t;
+}
+float4 float4( float2 a, float b, float c ) {
+	float4 t;
+	t.xy = a;
+	t.z = b;
+	t.w = c;
+	return t;
+}
+float4 float4( float a, float2 b, float c ) {
+	float4 t;
+	t.x = a;
+	t.yz = b;
+	t.w = c;
+	return t;
+}
+float4 float4( float a, float b, float2 c ) {
+	float4 t;
+	t.x = a;
+	t.y = b;
+	t.zw = c;
+	return t;
+}
+float4 float4( float2 a, float2 b ) {
+	float4 t;
+	t.xy = a;
+	t.zw = b;
+	return t;
+}
+float4 float4( float3 a, float b ) {
+	float4 t;
+	t.xyz = a;
+	t.w = b;
+	return t;
+}
+float4 float4( float a, float3 b ) {
+	float4 t;
+	t.x = a;
+	t.yzw = b;
+	return t;
+}
+float3 float3( float a, float b, float c ) {
+	float3 t;
+	t.x = a;
+	t.y = b;
+	t.z = c;
+	return t;
+}
+float3 float3( float2 a, float b ) {
+	float3 t;
+	t.xy = a;
+	t.z = b;
+	return t;
+}
+float3 float3( float a, float2 b ) {
+	float3 t;
+	t.x = a;
+	t.yz = b;
+	return t;
+}
+float3 float3( float a ) {
+	return a.xxx;
+}
+float2 float2( float a, float b ) {
+	float2 t;
+	t.x = a;
+	t.y = b;
+	return t;
+}
+float2 float2( float a ) {
+	return a.xx; 
+}
+
+// standard AGAL functions.
+
+float4 rcp( float4 a ) { float4 t; agal( 0x05, t, a ); return t; }
+float3 rcp( float3 a ) { float3 t; agal( 0x05, t, a ); return t; }
+float2 rcp( float2 a ) { float2 t; agal( 0x05, t, a ); return t; }
+float  rcp( float  a ) { float  t; agal( 0x05, t, a ); return t; }
+float4 min( float4 a, float4 b ) { float4 t; agal( 0x06, t, a, b ); return t; }
+float3 min( float3 a, float3 b ) { float3 t; agal( 0x06, t, a, b ); return t; }
+float2 min( float2 a, float2 b ) { float2 t; agal( 0x06, t, a, b ); return t; }
+float  min( float  a, float  b ) { float  t; agal( 0x06, t, a, b ); return t; }
+float4 min( float4 a, float  b ) { float4 t; agal( 0x06, t, a, b.xxxx ); return t; }
+float3 min( float3 a, float  b ) { float3 t; agal( 0x06, t, a, b.xxx ); return t; }
+float2 min( float2 a, float  b ) { float2 t; agal( 0x06, t, a, b.xx ); return t; }
+float4 max( float4 a, float4 b ) { float4 t; agal( 0x07, t, a, b ); return t; }
+float3 max( float3 a, float3 b ) { float3 t; agal( 0x07, t, a, b ); return t; }
+float2 max( float2 a, float2 b ) { float2 t; agal( 0x07, t, a, b ); return t; }
+float  max( float  a, float  b ) { float  t; agal( 0x07, t, a, b ); return t; }
+float4 max( float4 a, float  b ) { float4 t; agal( 0x07, t, a, b.xxxx ); return t; }
+float3 max( float3 a, float  b ) { float3 t; agal( 0x07, t, a, b.xxx ); return t; }
+float2 max( float2 a, float  b ) { float2 t; agal( 0x07, t, a, b.xx ); return t; }
+float4 frac( float4 a ) { float4 t; agal( 0x08, t, a ); return t; }
+float3 frac( float3 a ) { float3 t; agal( 0x08, t, a ); return t; }
+float2 frac( float2 a ) { float2 t; agal( 0x08, t, a ); return t; }
+float  frac( float  a ) { float  t; agal( 0x08, t, a ); return t; }
+float4 sqrt( float4 a ) { float4 t; agal( 0x09, t, a ); return t; }
+float3 sqrt( float3 a ) { float3 t; agal( 0x09, t, a ); return t; }
+float2 sqrt( float2 a ) { float2 t; agal( 0x09, t, a ); return t; }
+float  sqrt( float  a ) { float  t; agal( 0x09, t, a ); return t; }
+float4 rsq( float4 a ) { float4 t; agal( 0x0a, t, a ); return t; }
+float3 rsq( float3 a ) { float3 t; agal( 0x0a, t, a ); return t; }
+float2 rsq( float2 a ) { float2 t; agal( 0x0a, t, a ); return t; }
+float  rsq( float  a ) { float  t; agal( 0x0a, t, a ); return t; }
+float4 pow( float4 a, float4 b ) { float4 t; agal( 0x0b, t, a, b ); return t; }
+float3 pow( float3 a, float3 b ) { float3 t; agal( 0x0b, t, a, b ); return t; }
+float2 pow( float2 a, float2 b ) { float2 t; agal( 0x0b, t, a, b ); return t; }
+float4 pow( float4 a, float  b ) { float4 t; agal( 0x0b, t, a, b.xxxx ); return t; }
+float3 pow( float3 a, float  b ) { float3 t; agal( 0x0b, t, a, b.xxx ); return t; }
+float2 pow( float2 a, float  b ) { float2 t; agal( 0x0b, t, a, b.xx ); return t; }
+float  pow( float a,  float  b ) { float  t; agal( 0x0b, t, a, b ); return t; }
+float4 log2( float4 a ) { float4 t; agal( 0x0c, t, a ); return t; }
+float3 log2( float3 a ) { float3 t; agal( 0x0c, t, a ); return t; }
+float2 log2( float2 a ) { float2 t; agal( 0x0c, t, a ); return t; }
+float  log2( float  a ) { float  t; agal( 0x0c, t, a ); return t; }
+float4 exp2( float4 a ) { float4 t; agal( 0x0d, t, a ); return t; }
+float3 exp2( float3 a ) { float3 t; agal( 0x0d, t, a ); return t; }
+float2 exp2( float2 a ) { float2 t; agal( 0x0d, t, a ); return t; }
+float  exp2( float  a ) { float  t; agal( 0x0d, t, a ); return t; }
+float3 normalize( float3 a ) { float3 t; agal( 0x0e, t.xyz, a ); return t; }
+//float2 normalize( float2 a ) { float3 t; agal( 0x0e, t.xyz, a ); return t.xy; }
+float2 normalize( float2 a ) { float3 t; agal( 0x0e, t.xyz, float3( a, 0 ) ); return t.xy; }
+float4 sin( float4 a ) { float4 t; agal( 0x0f, t, a ); return t; }
+float3 sin( float3 a ) { float3 t; agal( 0x0f, t, a ); return t; }
+float2 sin( float2 a ) { float2 t; agal( 0x0f, t, a ); return t; }
+float  sin( float  a ) { float  t; agal( 0x0f, t, a ); return t; }
+float4 cos( float4 a ) { float4 t; agal( 0x10, t, a ); return t; }
+float3 cos( float3 a ) { float3 t; agal( 0x10, t, a ); return t; }
+float2 cos( float2 a ) { float2 t; agal( 0x10, t, a ); return t; }
+float  cos( float  a ) { float  t; agal( 0x10, t, a ); return t; }
+float3 cross( float3 a, float3 b ) { float3 t; agal( 0x11, t.xyz, a, b ); return t; }
+float2 cross( float2 a, float2 b ) { float3 t; agal( 0x11, t.xyz, a, b ); return t.xy; }
+float  dot( float2 a, float2 b ) { return a.x * b.x + a.y * b.y; }
+float  dot( float3 a, float3 b ) { float t; agal( 0x12, t, a, b ); return t; }
+float  dot( float4 a, float4 b ) { float t; agal( 0x13, t, a, b ); return t; }
+float4 abs( float4 a ) { float4 t; agal( 0x14, t, a ); return t; }
+float3 abs( float3 a ) { float3 t; agal( 0x14, t, a ); return t; }
+float2 abs( float2 a ) { float2 t; agal( 0x14, t, a ); return t; }
+float  abs( float  a ) { float  t; agal( 0x14, t, a ); return t; }
+float4 neg( float4 a ) { float4 t; agal( 0x15, t, a ); return t; }
+float3 neg( float3 a ) { float3 t; agal( 0x15, t, a ); return t; }
+float2 neg( float2 a ) { float2 t; agal( 0x15, t, a ); return t; }
+float  neg( float  a ) { float  t; agal( 0x15, t, a ); return t; }
+float4 saturate( float4 a ) { float4 t; agal( 0x16, t, a ); return t; }
+float3 saturate( float3 a ) { float3 t; agal( 0x16, t, a ); return t; }
+float2 saturate( float2 a ) { float2 t; agal( 0x16, t, a ); return t; }
+float  saturate( float  a ) { float  t; agal( 0x16, t, a ); return t; }
+float4 sampler2D( sampler2D texture, float2 uv ) { float4 t; agal( 0x28, t, uv, texture ); return t; }
+float4 samplerCube( samplerCube texture, float3 normal ) { float4 t; agal( 0x28, t, normal, texture ); return t; }
+
+float3 mul3x3( float3 a, float3 b ) { float3 t; agal( 0x17, t, a, b ); return t; }
+float3 mul3x4( float4 a, float4 b ) { float3 t; agal( 0x19, t, a, b ); return t; }
+float3 mul3x4( float4 a, float4x4 b ) { float3 t; agal( 0x19, t, a, b ); return t; }
+float3 mul3x4( float4 a, float4x3 b ) { float3 t; agal( 0x19, t, a, b ); return t; }
+
+float3 mul3x3( float3 a, float4x4 b ) { float3 t; agal( 0x17, t, a, b[0].xyz ); return t; }
+float3 mul3x3( float3 a, float3x3 b ) { float3 t; agal( 0x17, t, a, b[0].xyz ); return t; }
+float4 mul4x4( float4 a, float4x4 b ) { float4 t; agal( 0x18, t, a, b[0].xyzw ); return t; }
+
+void kill( float src ) { agal( 0x27, null, src ); }
+
+// extended FLSL functions.
+
+float4 floor( float4 a ) { return a - frac( a ); }
+float3 floor( float3 a ) { return a - frac( a ); }
+float2 floor( float2 a ) { return a - frac( a ); }
+float  floor( float  a ) { return a - frac( a ); }
+float4 ceil( float4 a ) { return a + frac( -a ); }
+float3 ceil( float3 a ) { return a + frac( -a ); }
+float2 ceil( float2 a ) { return a + frac( -a ); }
+float  ceil( float  a ) { return a + frac( -a ); }
+float4 clamp( float4 a, float4 min, float4 max ) { return max( min( a, max ), min ); }
+float3 clamp( float3 a, float3 min, float3 max ) { return max( min( a, max ), min ); }
+float2 clamp( float2 a, float2 min, float2 max ) { return max( min( a, max ), min ); }
+float  clamp( float  a, float  min, float  max ) { return max( min( a, max ), min ); }
+float4 clamp( float4 a, float  min, float  max ) { return max( min( a, max ), min ); }
+float3 clamp( float3 a, float  min, float  max ) { return max( min( a, max ), min ); }
+float2 clamp( float2 a, float  min, float  max ) { return max( min( a, max ), min ); }
+float3 reflect( float3 v, float3 normal ) { return v - normal * 2 * dot( v, normal ); }
+float3 refract( float3 v, float3 normal, float eta ) {
+	float cosI = dot( -v, normal );
+	float cosT2 = 1.0 - eta * eta * ( 1.0 - cosI * cosI );
+	float3 t = eta * v + ((eta * cosI - sqrt(abs(cosT2))) * normal);
+	return t * cosT2;
+}
+float  lerp( float  a, float  b, float w ) { return a + w * (b - a); }
+float2 lerp( float2 a, float2 b, float w ) { return a + w * (b - a); }
+float3 lerp( float3 a, float3 b, float w ) { return a + w * (b - a); }
+float4 lerp( float4 a, float4 b, float w ) { return a + w * (b - a); }
+float2 lerp( float2 a, float2 b, float2 w ) { return a + w * (b - a); }
+float3 lerp( float3 a, float3 b, float3 w ) { return a + w * (b - a); }
+float4 lerp( float4 a, float4 b, float4 w ) { return a + w * (b - a); }
+float  smoothstep( float  a, float  b, float  x ) { float  t = saturate((x - a) / (b - a)); return t * t * (3.0 - (2.0 * t)); }
+float2 smoothstep( float2 a, float2 b, float2 x ) { float2 t = saturate((x - a) / (b - a)); return t * t * (3.0 - (2.0 * t)); }
+float3 smoothstep( float3 a, float3 b, float3 x ) { float3 t = saturate((x - a) / (b - a)); return t * t * (3.0 - (2.0 * t)); }
+float4 smoothstep( float4 a, float4 b, float4 x ) { float4 t = saturate((x - a) / (b - a)); return t * t * (3.0 - (2.0 * t)); }
+float  length( float4 a ) { return sqrt( dot( a, a ) ); }
+float  length( float3 a ) { return sqrt( dot( a, a ) ); }
+float  length( float2 a ) { return sqrt( a.x * a.x + a.y * a.y ); }
+float  distance( float4 a, float4 b ) { return length( b - a ); }
+float  distance( float3 a, float3 b ) { return length( b - a ); }
+float  distance( float2 a, float2 b ) { return length( b - a ); }
+float  interpolate( float  value ) { interpolated float  ivalue = value; return ivalue }
+float2 interpolate( float2 value ) { interpolated float2 ivalue = value; return ivalue }
+float3 interpolate( float3 value ) { interpolated float3 ivalue = value; return ivalue }
+float4 interpolate( float4 value ) { interpolated float4 ivalue = value; return ivalue }
+
+float4 const( float a, float b, float c, float d ) { const float4 t = float4( a, b, c, d ); return t; }
+float4 const( float2 a, float b, float c ) { const float4 t = float4( a.x, a.y, b, c ); return t; }
+float4 const( float a, float2 b, float c ) { const float4 t = float4( a, b.x, b.y, c ); return t; }
+float4 const( float a, float b, float2 c ) { const float4 t = float4( a, b, c.x, c.y ); return t; }
+float4 const( float2 a, float2 b ) { const float4 t = float4( a.x, a.y, b.x, b.y ); return t; }
+float4 const( float3 a, float b ) { const float4 t = float4( a.x, a.y, a.z, b ); return t; }
+float4 const( float a, float3 b ) { const float4 t = float4( a, b.x, b.y, b.z ); return t; }
+float4 const( float4 a ) { const float4 t = a; return t; }
+float3 const( float a, float b, float c ) { const float3 t = float3( a, b, c ); return t; }
+float3 const( float2 a, float b ) { const float3 t = float3( a.x, a.y, b ); return t; }
+float3 const( float a, float2 b ) { const float3 t = float3( a, b.x, b.y ); return t; }
+float3 const( float3 a ) { const float3 t = a; return t; }
+float2 const( float a, float b ) { const float2 t = float2( a, b ); return t; }
+float2 const( float2 a ) { const float2 t = a; return t; }
+float const( float a ) { const float t = a; return t; }
+
+float4 ddx( float4 a ) { float4 t; agal( 0x1a, t, a ); return t; }
+float3 ddx( float3 a ) { float3 t; agal( 0x1a, t, a ); return t; }
+float2 ddx( float2 a ) { float2 t; agal( 0x1a, t, a ); return t; }
+float1 ddx( float1 a ) { float1 t; agal( 0x1a, t, a ); return t; }
+float4 ddy( float4 a ) { float4 t; agal( 0x1b, t, a ); return t; }
+float3 ddy( float3 a ) { float3 t; agal( 0x1b, t, a ); return t; }
+float2 ddy( float2 a ) { float2 t; agal( 0x1b, t, a ); return t; }
+float1 ddy( float1 a ) { float1 t; agal( 0x1b, t, a ); return t; }
+
+float4 log( float4 a ) { return log2( a ) / 1.4426950408889634; }
+float3 log( float3 a ) { return log2( a ) / 1.4426950408889634; }
+float2 log( float2 a ) { return log2( a ) / 1.4426950408889634; }
+float  log( float  a ) { return log2( a ) / 1.4426950408889634; }
+float4 exp( float4 a ) { return pow( ( 2.718281828459045 ).xxxx, a ) ; }
+float3 exp( float3 a ) { return pow( ( 2.718281828459045 ).xxx, a ) ; }
+float2 exp( float2 a ) { return pow( ( 2.718281828459045 ).xx, a ) ; }
+float  exp( float  a ) { return pow( ( 2.718281828459045 ), a ) ; }
+

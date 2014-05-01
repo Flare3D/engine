@@ -1,0 +1,17 @@
+
+#dependences false;
+
+use namespace flare;
+
+param float1 channel <ui = "list:0,1,2" order = 0> = 0;
+
+param float level <order = 1> = 1;
+
+technique main 
+{
+	output fragment;
+	#if ( level != 1 )
+		fragment = interpolate( getColor( channel ) * level );
+	#else
+		fragment = interpolate( getColor( channel ) );
+}

@@ -1,0 +1,42 @@
+
+#dependences false;
+
+use namespace flare;
+
+const float2 m = float2( 0.5, -0.5 );
+
+float4 reflectionMap( samplerCube texture, float3 normal ) {
+	interpolated float3 iReflection = reflect( vwPosition - camPos, normal );
+	return samplerCube( texture, iReflection );
+}
+
+float4 reflectionMap( samplerCube texture ) {
+	return reflectionMap( texture, vwNormal.xyz );
+}
+
+float4 perPixelReflectionMap( samplerCube texture ) {
+	#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+	interpolated float3 ifwPosition = vwPosition - camPos;
+	return samplerCube( texture, reflect( ifwPosition, fwNormal.xyz ) );
+}
+
+float4 reflectionMap( sampler2D texture ) {
+	interpolated float3 ivwPosition = normalize( (float4(vwPosition, 1) * view).xyz );
+	interpolated float3 ivwNormal = normalize( vwNormal * view.xyz );
+	return sampler2D( texture, reflect( ivwPosition, ivwNormal ).xy * m + 0.5 );
+}
+
+float4 perPixelReflectionMap( sampler2D texture ) {
+	#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+	interpolated float3 ivwPosition = normalize( (float4(vwPosition, 1) * view).xyz );
+	return sampler2D( texture, reflect( ivwPosition, normalize( fwNormal * view.xyz ) ).xy * m + 0.5 );
+}
+
+float4 cubeMap( samplerCube texture ) {
+	return samplerCube( texture, iwNormal.xyz );
+}
+
+float4 perPixelCubeMap( samplerCube texture ) {
+	#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+	return samplerCube( texture, fwNormal.xyz );
+}

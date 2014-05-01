@@ -1,0 +1,14 @@
+
+use namespace flare;
+
+technique main
+{
+	param float size = 10;
+	param float4 color = float4( 1, 0, 1, 1 );
+	
+	interpolated float2 iuv = uv0 * size;
+	
+	float2 c = frac( floor( iuv ) * 0.5 );
+	
+	output fragment = color * ( (c.x + c.y != 0.5) * 0.25 + 0.75 );
+}

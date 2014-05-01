@@ -1,0 +1,9 @@
+
+#dependences false;
+
+param float4 selfColor = 1;
+
+technique main
+{
+	flare.lights.selfColor = selfColor;
+}

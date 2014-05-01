@@ -1,0 +1,38 @@
+
+#dependences false;
+
+use namespace flare;
+
+param float size = 100;
+param float alpha = 1;
+
+sampler2D texture;
+
+technique projected
+{
+	float3 envNormals = normalize( normal * worldView.xyz );	
+	
+	float2 p;
+	p.x = dot( position.xyzw, worldView[0] );
+	p.y = dot( position.xyzw, worldView[1] );
+	
+	interpolated float2 uvs = -p.xy / size + 0.5;
+	
+	output fragment = sampler2D( texture, uvs ) * alpha;
+}
+
+technique spherical
+{
+	float4 reflectionMap( sampler2D texture ) {
+		
+		#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+		
+		const float2 m = float2( 0.5, -0.5 );
+		
+		interpolated float3 ivwPosition = (float4(vwPosition, 1) * view).xyz;
+		
+		return sampler2D( texture, reflect( normalize( ivwPosition ), normalize( fwNormal * view.xyz ) ).xy * m + 0.5 );
+	}
+	
+	output fragment = reflectionMap( texture ) * alpha;
+}

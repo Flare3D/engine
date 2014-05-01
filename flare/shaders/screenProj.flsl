@@ -1,0 +1,15 @@
+
+sampler2D texture <wrap = 0, mip = 0>;
+
+technique main 
+{
+	param WORLD_VIEW_PROJ wvp;
+	input POSITION pos;
+	
+	float4 sPos = pos.xyzw * wvp;
+	interpolated float4 isPos = sPos;
+	
+	float2 m = const( 0.5, -0.5 );
+	
+	output fragment = sampler2D(texture, isPos.xy / isPos.w * m + m.x );
+}

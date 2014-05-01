@@ -1,0 +1,23 @@
+
+#dependences false;
+
+use namespace flare;
+
+sampler2D texture <order = 0>;
+
+param float alpha <order = 1> = 1;
+param float2 scale <order = 2> = float2( 0.5, -0.5 );
+
+technique perPixel
+{
+	#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+	
+	output fragment = sampler2D( texture, normalize( fwNormal * view.xyz ).xy * scale.xy + 0.5 ) * alpha;
+}
+
+technique perVertex 
+{
+	interpolated float2 iEnv = normalize( vwNormal * view.xyz ).xy * scale.xy + 0.5;
+	
+	output fragment = sampler2D( texture, iEnv ) * alpha;
+}

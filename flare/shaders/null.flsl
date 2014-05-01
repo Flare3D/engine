@@ -1,0 +1,19 @@
+
+technique main
+{
+	input POSITION p;
+	input UV0 uv;
+	
+	param WORLD_VIEW_PROJ wvp;
+	
+	const float size = 10;
+	const float4 magenta = float4( 1, 0, 1, 1 );
+	
+	output vertex = p.xyzw * wvp;
+	
+	interpolated float2 iuv = uv * size;
+	
+	float2 c = frac( floor( iuv ) * 0.5 );
+	
+	output fragment = magenta * ( (c.x + c.y != 0.5) + 0.5 );
+}

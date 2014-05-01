@@ -1,0 +1,26 @@
+
+#dependences false;
+
+use namespace flare;
+use namespace flare.lights;
+
+param float channel <ui = "list:0,1,2,3" order = 0> = 0;
+sampler2D texture <order = 1>;
+param float2 powerLevel <order = 2> = 0;
+param float2 offset <order = 3> = 0;
+param float2 repeat <order = 4> = 1;
+
+technique main 
+{
+	#if ( repeat != 1 && offset != 0 ) 
+		specular = sampler2D( texture, getUV( channel ) * repeat + offset ).rgb;
+	#else if ( repeat != 1 ) 
+		specular = sampler2D( texture, getUV( channel ) * repeat ).rgb;
+	#else if ( offset != 0 ) 
+		specular = sampler2D( texture, getUV( channel ) + offset ).rgb;
+	#else 
+		specular = sampler2D( texture, getUV( channel ) ).rgb;	
+	
+	specular *= powerLevel.y;	
+	power = powerLevel.x;
+}

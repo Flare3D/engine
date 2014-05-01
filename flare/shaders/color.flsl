@@ -1,0 +1,9 @@
+
+#dependences false;
+
+param float4 color <ui = "color"> = 1;
+
+technique main 
+{
+	output fragment = color;
+}

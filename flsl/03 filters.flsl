@@ -1,0 +1,113 @@
+// ================================================================================
+//
+//	FLARE3D S.A.
+//	Copyright 2011 Flare3D S.A.
+//	All Rights Reserved.
+//
+//	NOTICE: Flare3D permits you to use, modify, and distribute this file
+//	in accordance with the terms of the license agreement accompanying it.
+//
+// ================================================================================
+
+namespace flare
+{
+	namespace filters
+	{
+		const float2 m = float2( 0.5, -0.5 );
+		
+		float4 textureMap( sampler2D texture ) {
+			return sampler2D( texture, iUV0 );
+		}
+		
+		float4 textureMap( sampler2D texture, float2 repeat ) {
+			return sampler2D( texture, iUV0 * repeat );
+		}
+		
+		float4 textureMap( sampler2D texture, float repeat ) {
+			return sampler2D( texture, iUV0 * repeat );
+		}
+		
+		float4 textureMap( sampler2D texture, float2 repeat, float2 offset ) {
+			return sampler2D( texture, iUV0 * repeat + offset );
+		}
+		
+		float4 cubeMap( samplerCube texture ) {
+			return samplerCube( texture, iwNormal.xyz );
+		}
+		
+		float4 perPixelCubeMap( samplerCube texture ) {
+			#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+			return samplerCube( texture, fwNormal.xyz );
+		}
+		
+		float4 reflectionMap( samplerCube texture, float3 normal ) {
+			interpolated float3 iReflection = reflect( vwPosition - camPos, normal );
+			return samplerCube( texture, iReflection );
+		}
+
+		float4 reflectionMap( samplerCube texture ) {
+			return reflectionMap( texture, vwNormal.xyz );
+		}
+
+		float4 perPixelReflectionMap( samplerCube texture ) {
+			#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+			interpolated float3 ifwPosition = vwPosition - camPos;
+			return samplerCube( texture, reflect( ifwPosition, fwNormal.xyz ) );
+		}
+
+		float4 reflectionMap( sampler2D texture ) {
+			interpolated float3 ivwPosition = normalize( (float4(vwPosition, 1) * view).xyz );
+			interpolated float3 ivwNormal = normalize( vwNormal * view.xyz );
+			return sampler2D( texture, reflect( ivwPosition, ivwNormal ).xy * m + 0.5 );
+		}
+		
+		float4 perPixelReflectionMap( sampler2D texture ) {
+			#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+			interpolated float3 ivwPosition = normalize( (float4(vwPosition, 1) * view).xyz );
+			return sampler2D( texture, reflect( ivwPosition, normalize( fwNormal * view.xyz ) ).xy * m + 0.5 );
+		}
+		
+		float4 refractionMap( samplerCube texture, float eta ) {
+			interpolated float3 iReflection = refract( normalize( vwPosition - camPos ), vwNormal, eta );
+			return samplerCube( texture, iReflection );
+		}
+		
+		float4 refractionMap( sampler2D texture, float eta ) {
+			interpolated float2 iReflection = refract( normalize( vwPosition - camPos ), vwNormal, eta ).xy * m + 0.5;
+			return sampler2D( texture, iReflection );
+		}
+		
+		float4 perPixelRefractionMap( samplerCube texture, float eta ) {
+			#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+			interpolated float3 v = vwPosition - camPos;
+			return samplerCube( texture, refract( normalize( v ), fwNormal, eta ) );
+		}
+		
+		float4 perPixelRefractionMap( sampler2D texture, float eta ) {
+			#if ( !fwNormal ) fwNormal = normalize( iwNormal );
+			interpolated float3 v = vwPosition - camPos;
+			return sampler2D( texture, refract( normalize(v), fwNormal, eta ).xy * m + 0.5 );
+		}
+		
+		float4 envMap( sampler2D texture, float2 scale ) {
+			interpolated float2 iEnv = normalize( vwNormal * view.xyz ).xy * scale.xy + 0.5;
+			return sampler2D( texture, iEnv );
+		}
+		
+		float4 envMap( sampler2D texture ) {
+			return envMap( texture, m )
+		}
+
+		float4 colorTransform( float4 source, float4 multiplier, float4 offset ) {
+			return (source * multiplier) + offset;
+		}
+		
+		float4 colorMatrix( float4 source, float4x4 matrix ) {
+			return source * matrix;
+		}
+		
+		float4 undefined() {
+			return (0.8).xxxx;
+		}
+	}
+}
