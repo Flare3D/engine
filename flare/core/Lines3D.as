@@ -1,12 +1,6 @@
 // ================================================================================
-//
-//	FLARE3D S.A.
-//	Copyright 2011 Flare3D S.A.
+//	Copyright 2009 - 2014 Flare3D, Inc.
 //	All Rights Reserved.
-//
-//	NOTICE: Flare3D permits you to use and modify this file
-//	in accordance with the terms of the license agreement accompanying it.
-//
 // ================================================================================
 
 package flare.core 
