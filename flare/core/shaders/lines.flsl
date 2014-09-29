@@ -1,0 +1,43 @@
+
+technique lines
+{
+	#semantic INPUT0 float3;
+	#semantic INPUT1 float3;
+	#semantic INPUT2 float1;
+	
+	param WORLD_VIEW worldView;
+	param PROJ proj;
+	
+	input INPUT0 start;
+	input INPUT1 end;
+	input INPUT2 thin;
+	param float4 color = 1;
+	param float near = 1;
+	param float size = 0.001;
+	
+	float4 lines()
+	{
+		float4 Q0 = start.xyzw * worldView;
+		float4 Q1 = end.xyzw * worldView;
+		
+		float4 L = Q1 - Q0;
+		
+		float behind = Q0.z < near;
+		float nbehind = 1 - behind;
+		
+		float dist = ( Q0.z - near ) / ( Q0.z - Q1.z );
+		
+		float4 clip = Q0 + L * dist;
+		
+		Q0 = ( behind * clip ) + Q0 * nbehind;
+		
+		float3 S = normalize( cross( L.xyz, Q1.xyz ) ) * thin;
+		
+		return float4( Q0.xyz + S * ( Q0.z * size ), 1 ) * proj;
+	}
+	
+	output sourceFactor = "sourceAlpha";
+	output destFactor = "oneMinusSourceAlpha";
+	output vertex = lines();
+	output fragment = color;
+}
