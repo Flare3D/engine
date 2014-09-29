@@ -90,10 +90,13 @@
 #semantic SIN_TIME float4;
 #semantic MOUSE float4;
 #semantic CAM_POS float3;
+#semantic CAM_DIR float3;
 #semantic VIEWPORT float4;
+#semantic SCREEN float4;
 #semantic NEAR_FAR float4;
 #semantic RANDOM float4;
- 
+#semantic FRAC_TIME float4;
+
 float4 float4( float a ) { 
 	return a.xxxx 
 }

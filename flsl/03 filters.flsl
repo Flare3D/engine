@@ -106,6 +106,27 @@ namespace flare
 			return source * matrix;
 		}
 		
+		float3 normalMap( sampler2D texture, float2 repeat, float2 offset ) {
+			float4 bump = sampler2D( texture, iUV0 * repeat + offset ) * 2 - 1;
+			interpolated float3 iwTangent =  normalize(tangent * world.xyz); 
+			interpolated float3 iwBinormal =  normalize(bitangent * world.xyz);
+			return normalize( bump.z * iwNormal + bump.x * iwTangent + bump.y * iwBinormal );
+		}
+		
+		float3 normalMap( sampler2D texture, float2 repeat ) {
+			float4 bump = sampler2D( texture, iUV0 * repeat ) * 2 - 1;
+			interpolated float3 iwTangent =  normalize(tangent * world.xyz); 
+			interpolated float3 iwBinormal =  normalize(bitangent * world.xyz);
+			return normalize( bump.z * iwNormal + bump.x * iwTangent + bump.y * iwBinormal );
+		}
+		
+		float3 normalMap( sampler2D texture ) {
+			float4 bump = sampler2D( texture, iUV0 ) * 2 - 1;
+			interpolated float3 iwTangent =  normalize(tangent * world.xyz); 
+			interpolated float3 iwBinormal =  normalize(bitangent * world.xyz);
+			return normalize( bump.z * iwNormal + bump.x * iwTangent + bump.y * iwBinormal );
+		}
+		
 		float4 undefined() {
 			return (0.8).xxxx;
 		}
