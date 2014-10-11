@@ -1,0 +1,12 @@
+use namespace flare;
+
+samplerCube texture <mip = 0, wrap = 0>;
+
+technique main 
+{
+	float4 hPos = float4(position,0);
+	output vertex = (hPos * worldViewProj).xyww;
+	output fragment = samplerCube( texture, interpolate( normal ) );
+	output depthWrite = false;
+	output cullFace = "none";
+}
