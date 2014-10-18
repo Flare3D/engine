@@ -1,0 +1,26 @@
+
+// redefine color because by default is a float3 value.
+#semantic COLOR0 float4;
+
+input POSITION position;
+input COLOR0 color0;
+input UV0 uv0;
+
+param WORLD_VIEW_PROJ worldViewProj;
+
+sampler2D texture <mip = 0, wrap = 0>;
+
+output depthCompare = "always";
+output depthWrite = false;
+output cullFace = "none";
+
+interpolated float4 color = color0;
+interpolated float2 uv = uv0;
+
+output vertex = position.xyzw * worldViewProj;
+
+technique normal {
+	output sourceFactor = "one";
+	output destFactor = "oneMinusSourceAlpha";
+	output fragment = sampler2D( texture, uv ) * color;
+}
