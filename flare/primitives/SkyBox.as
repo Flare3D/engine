@@ -69,10 +69,11 @@ package flare.primitives
 			
 			if ( !scene ) upload( Device3D.scene );
 			
-			Device3D.global.copyFrom( world );
-			Device3D.worldViewProj.copyFrom( world );
-			Device3D.worldViewProj.append( Device3D.viewProj );
-			Device3D.worldViewProj.appendScale( _scaleRatio, _scaleRatio, 1 )
+			Device3D.global.identity();
+			Device3D.worldViewProj.copyFrom( Device3D.proj );
+			Device3D.worldViewProj.prependScale(_scaleRatio, _scaleRatio, 1 );
+			Device3D.worldViewProj.prepend( Device3D.view );
+			
 			Device3D.objectsDrawn++;
 			Device3D.lastMaterial = null;
 			
