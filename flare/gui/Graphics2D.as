@@ -1,11 +1,13 @@
 package flare.gui
 {
+	import avm2.intrinsics.memory.*;
 	import flare.core.*;
 	import flare.flsl.*;
 	import flare.system.*;
 	import flare.utils.*;
 	import flash.display3D.*;
 	import flash.geom.*;
+	import flash.system.*;
 	import flash.utils.*;
 	
 	/**
@@ -17,7 +19,6 @@ package flare.gui
 		private static var GUI_FLSL:Class;
 		private static var uvRect:Rectangle = new Rectangle( 0, 0, 1, 1 );
 		private static var uvs:Rectangle = new Rectangle( 0, 0, 1, 1 );
-		private static var material:FLSLMaterial;
 		
 		/**
 		 * Sets a fixed area in pixels to draw. If the area is bigger or smaller than the screen viewport, it will scale to adapt to 
@@ -26,65 +27,81 @@ package flare.gui
 		public var viewPort:Rectangle;
 		public var transform:Matrix = new Matrix;
 		
+		private var _defaultMaterial:FLSLMaterial;
 		private var _reupload:Boolean = true;
 		private var _camera:Camera3D = new Camera3D();
 		private var _surface:Surface3D;
 		private var _vertices:int = 0;
-		private var _quadsTotal:int = 0;
-		private var _quadCount:int = 0;
+		private var _quads:int = 0;
 		private var _material:FLSLMaterial;
 		private var _texture:Texture3D;
 		private var _dirty:Boolean = true;
+		
+		private var _vertexColors:Boolean = true;
 		private var _red:Number = 1;
 		private var _green:Number = 1;
 		private var _blue:Number = 1;
 		private var _alpha:Number = 1;
 		
-		private var _vertexVector:Vector.<Number> = new Vector.<Number>;
-		private var _indexVector:Vector.<uint> = new Vector.<uint>;
-		
-		public function Graphics2D() 
+		public function Graphics2D( material:FLSLMaterial = null ) 
 		{
-			if ( !material ) 
-				material = new FLSLMaterial( "gui", new GUI_FLSL, null, true );
-				
-			_surface = new Surface3D( "spriteQuads" );
+			_material = material;
+			_defaultMaterial = new FLSLMaterial( "gui", new GUI_FLSL, null, true );
+			_defaultMaterial.upload( Device3D.scene );
+			
+			build();
+			
+			expand( 100 );
+		}
+		
+		private function build():void
+		{
+			if ( _surface ) _surface.dispose();
+			
+			_surface = new Surface3D( "sprites" );
+			_surface.vertexBytes = new ByteArray;
+			_surface.indexBytes = new ByteArray;
 			_surface.addVertexData( Surface3D.POSITION, 2 );
 			_surface.addVertexData( Surface3D.UV0, 2 );
-			_surface.addVertexData( Surface3D.COLOR0, 4 );
-			_surface.vertexVector = _vertexVector;
-			_surface.indexVector = _indexVector;
+			
+			if ( _vertexColors )
+				_surface.addVertexData( Surface3D.COLOR0, 4 );
 		}
 		
 		private function expand( quads:int = -1 ):void
 		{
 			if ( quads == -1 ) {
-				quads = _quadsTotal * 2;
+				quads = _quads;
 				if ( quads == 0 ) quads = 1;
 			}
 			
-			_surface.vertexVector.fixed = false;
-			_surface.vertexVector.length += quads * 4 * _surface.sizePerVertex;
-			_surface.vertexVector.fixed = true;
+			var position:uint = _surface.indexBytes.length;
+			var vertex:uint = _surface.vertexBytes.length / _surface.sizePerVertex / 4;
+				vertex += quads * 4;
+				
+			if ( vertex >= 65000 ) vertex = 65000;
+			
+			_surface.vertexBytes.length = vertex * _surface.sizePerVertex * 4;
+			_surface.indexBytes.length = vertex / 4 * 12; // 12 = 6 indices x 16bit each.
 			_surface.download();
 			
-			var index:Vector.<uint> = _surface.indexVector;
-			for ( var i:int = 0; i < quads; i++ ) {
-				index.push( _vertices, _vertices + 1, _vertices + 2, _vertices + 3, _vertices + 2, _vertices + 1 );
-				_vertices += 4;
+			ApplicationDomain.currentDomain.domainMemory = _surface.indexBytes;
+			var length:int = _surface.indexBytes.length;
+			while( position < length ) {
+				si16( _vertices, position );
+				si16( _vertices + 1, position + 2 );
+				si16( _vertices + 2, position + 4 );
+				si16( _vertices + 3, position + 6 );
+				si16( _vertices + 2, position + 8 );
+				si16( _vertices + 1, position + 10 );
+				position += 12; _vertices += 4;
 			}
+			ApplicationDomain.currentDomain.domainMemory = _surface.vertexBytes;
 		}
 		
 		private function reset():void
 		{
-			_red = 1;
-			_green = 1;
-			_blue = 1;
-			_alpha = 0.2;
-			_quadCount = 0;
-			_quadsTotal = 0;
-			_texture = null;
-			_material = null;
+			_quads = 0;
 			_reupload = true;
 		}
 		
@@ -97,8 +114,7 @@ package flare.gui
 		public function clear():void
 		{
 			reset();
-			
-			_dirty = true;
+			setupFrame();
 		}
 		
 		public function setScrollRect( rect:Rectangle ):void
@@ -108,18 +124,9 @@ package flare.gui
 			Device3D.context.setScissorRectangle( rect );
 		}
 		
-		public function beginShaderFill( material:FLSLMaterial ):void
-		{
-			if ( _material != material )
-				flush();
-			
-			_material = material;
-		}
-		
 		public function beginTextureFill( texture:Texture3D, tint:Vector3D = null ):void
 		{
-			if ( _material != material || _texture != texture )
-				flush();
+			if ( _texture != texture ) flush();
 			
 			if ( tint ) {
 				_red = tint.x;
@@ -134,7 +141,6 @@ package flare.gui
 			}
 			
 			_texture = texture;
-			_material = material;
 		}
 		
 		public function drawFrame( x:Number, y:Number, frame:TextureFrame, transform:Matrix = null ):void
@@ -144,13 +150,15 @@ package flare.gui
 		
 		public function drawImage( x:Number, y:Number, w:Number, h:Number, uvsRect:Rectangle = null, transform:Matrix = null ):void
 		{
-			if ( _vertices <= _quadsTotal * 4 ) 
-				expand();
-			else
-				_reupload = true;
+			if ( _quads * 4 >= 65000 ) flush();
 			
-			var vertex:Vector.<Number> = _surface.vertexVector;
-			var index:int = _quadsTotal * 32;
+			if ( _vertices <= _quads * 4 ) expand( 200 );
+			
+			_reupload = true;
+			
+			var index:int;
+			var bytes:ByteArray = _surface.vertexBytes;
+			var size:int = _surface.sizePerVertex;
 			
 			// uv's part.
 			uvsRect ||= Graphics2D.uvRect;
@@ -171,83 +179,81 @@ package flare.gui
 				var ty:Number = transform.ty;
 				var vx:Number;
 				var vy:Number;
+				index = _quads * size * 16
 				vx = x * rx + y * ux + tx;
 				vy = x * ry + y * uy + ty;
-				vertex[index++] = vx;
-				vertex[index++] = vy;
-				vertex[index++] = u0;
-				vertex[index++] = v0;
-				vertex[index++] = _red;
-				vertex[index++] = _green;
-				vertex[index++] = _blue;
-				vertex[index++] = _alpha;
+				sf32( vx, index );
+				sf32( vy, index + 4 );
+				sf32( u0, index + 8 );
+				sf32( v0, index + 12 );
+				index += size * 4;
 				vx = w * rx + y * ux + tx;
 				vy = w * ry + y * uy + ty;
-				vertex[index++] = vx;
-				vertex[index++] = vy;
-				vertex[index++] = u1;
-				vertex[index++] = v0;
-				vertex[index++] = _red;
-				vertex[index++] = _green;
-				vertex[index++] = _blue;
-				vertex[index++] = _alpha;
+				sf32( vx, index );
+				sf32( vy, index + 4 );
+				sf32( u1, index + 8 );
+				sf32( v0, index + 12 );
+				index += size * 4;
 				vx = x * rx + h * ux + tx;
 				vy = x * ry + h * uy + ty;
-				vertex[index++] = vx;
-				vertex[index++] = vy;
-				vertex[index++] = u0;
-				vertex[index++] = v1;
-				vertex[index++] = _red;
-				vertex[index++] = _green;
-				vertex[index++] = _blue;
-				vertex[index++] = _alpha;
+				sf32( vx, index );
+				sf32( vy, index + 4 );
+				sf32( u0, index + 8 );
+				sf32( v1, index + 12 );
+				index += size * 4;
 				vx = w * rx + h * ux + tx;
 				vy = w * ry + h * uy + ty;
-				vertex[index++] = vx;
-				vertex[index++] = vy;
-				vertex[index++] = u1;
-				vertex[index++] = v1;
-				vertex[index++] = _red;
-				vertex[index++] = _green;
-				vertex[index++] = _blue;
-				vertex[index++] = _alpha;
+				sf32( vx, index );
+				sf32( vy, index + 4 );
+				sf32( u1, index + 8 );
+				sf32( v1, index + 12 );
 			} else {
-				vertex[index++] = x;
-				vertex[index++] = y;
-				vertex[index++] = u0;
-				vertex[index++] = v0;
-				vertex[index++] = _red;
-				vertex[index++] = _green;
-				vertex[index++] = _blue;
-				vertex[index++] = _alpha;
-				vertex[index++] = w;
-				vertex[index++] = y;
-				vertex[index++] = u1;
-				vertex[index++] = v0;
-				vertex[index++] = _red;
-				vertex[index++] = _green;
-				vertex[index++] = _blue;
-				vertex[index++] = _alpha;
-				vertex[index++] = x;
-				vertex[index++] = h;
-				vertex[index++] = u0;
-				vertex[index++] = v1;
-				vertex[index++] = _red;
-				vertex[index++] = _green;
-				vertex[index++] = _blue;
-				vertex[index++] = _alpha;
-				vertex[index++] = w;
-				vertex[index++] = h;
-				vertex[index++] = u1;
-				vertex[index++] = v1;
-				vertex[index++] = _red;
-				vertex[index++] = _green;
-				vertex[index++] = _blue;
-				vertex[index++] = _alpha;
+				sf32( x, index );
+				sf32( y, index + 4 );
+				sf32( u0, index + 8 );
+				sf32( v0, index + 12 );
+				index += size * 4;
+				sf32( w, index );
+				sf32( y, index + 4 );
+				sf32( u1, index + 8 );
+				sf32( v0, index + 12 );
+				index += size * 4;
+				sf32( x, index );
+				sf32( h, index + 4 );
+				sf32( u0, index + 8 );
+				sf32( v1, index + 12 );
+				index += size * 4;
+				sf32( w, index );
+				sf32( h, index + 4 );
+				sf32( u1, index + 8 );
+				sf32( v1, index + 12 );
 			}
 			
-			_quadsTotal++;
-			_quadCount += 2;
+			if ( _vertexColors ) {
+				var offset:Number = _surface.offset[Surface3D.COLOR0] * 4;
+				index = _quads * size * 16 + offset;
+				sf32( _red, index );
+				sf32( _green, index + 4 );
+				sf32( _blue, index + 8 );
+				sf32( _alpha, index + 12 );
+				index += size * 4;
+				sf32( _red, index );
+				sf32( _green, index + 4 );
+				sf32( _blue, index + 8 );
+				sf32( _alpha, index + 12 );
+				index += size * 4;
+				sf32( _red, index );
+				sf32( _green, index + 4 );
+				sf32( _blue, index + 8 );
+				sf32( _alpha, index + 12 );
+				index += size * 4;
+				sf32( _red, index );
+				sf32( _green, index + 4 );
+				sf32( _blue, index + 8 );
+				sf32( _alpha, index + 12 );
+			}
+			
+			_quads++;
 		}
 		
 		public function drawText( font:TextureFont2D, text:String, x:Number = 0, y:Number = 0, align:int = 0, transform:Matrix = null ):void 
@@ -341,29 +347,26 @@ package flare.gui
 				transform.scale( w / vw, h / vh );
 				transform.translate( sw * 0.5, sh * 0.5 );
 			}
+			
+			ApplicationDomain.currentDomain.domainMemory = _surface.vertexBytes;
 		}
 		
 		public function render():void
 		{
-			if ( !_quadCount || !_material ) return;
-			
-			if ( !_material.scene ) 
-				_material.upload( Device3D.scene );
+			if ( !_quads ) return;
 			
 			if ( _reupload ) {
 				_reupload = false;
-				_surface.updateVertexBuffer();
-				_surface.updateIndexBuffer();
+				_surface.updateVertexBuffer( 0, _quads * 4 );
+				_surface.updateIndexBuffer( 0, _quads * 6 );
 			}
 			
-			if ( _dirty ) setupFrame();
-			
-			_dirty = false;
-			
-			material.setTechnique( "normal" );
-			material.params.texture.value = _texture;
-			
-			_material.draw( null, _surface, 0, _quadCount );
+			if ( !_material ) {
+				_defaultMaterial.setTechnique( _vertexColors ? "tinted" : "normal" );
+				_defaultMaterial.params.texture.value = _texture;
+				_defaultMaterial.draw( null, _surface, 0, _quads * 2 );
+			} else
+				_material.draw( null, _surface, 0, _quads * 2 );
 		}
 	}
 }

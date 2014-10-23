@@ -121,14 +121,19 @@ package flare.gui
 				rect.height = scrollRect.width * graphics.transform.b + scrollRect.height * graphics.transform.d;
 				graphics.setScrollRect( rect );
 			}
-				
+			
+			updateTransform();
+			
 			graphics.beginTextureFill( _texture, tint );
 			if ( _frame ) 
 				graphics.drawImage( _frame.offset.x, _frame.offset.y, _frame.width, _frame.height, uv, transform );
 			else
 				graphics.drawImage( 0, 0, width, height, uv, transform );
 			
-			super.draw();
+			if ( children ) {
+				var length:int = children.length;
+				for ( var i:int = 0; i < length; i++ ) children[i].draw()
+			}			
 			
 			if ( scrollRect )
 				graphics.setScrollRect( null );

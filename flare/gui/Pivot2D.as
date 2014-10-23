@@ -9,7 +9,11 @@ package flare.gui
 	 */
 	public class Pivot2D extends EventDispatcher
 	{
-		internal static var TO_RAD:Number = Math.PI / 180;
+		internal static const TO_RAD:Number = Math.PI / 180;
+		internal static const TWO_PI:Number = Math.PI * 2;
+		internal static const POW:Number = Math.pow( 10, 3 );
+		internal static const cos:Vector.<Number> = new Vector.<Number>;
+		internal static const sin:Vector.<Number> = new Vector.<Number>;
 		internal static var inv:Matrix = new Matrix;
 		
 		/** 
@@ -49,6 +53,20 @@ package flare.gui
 		
 		public function Pivot2D( name:String = "" ) 
 		{
+			if ( cos.length == 0 ) {
+				var round:Number = 1.0 / POW;
+				var len:uint = 1 + Math.PI * 2 * POW;
+				cos.length = len; cos.fixed = true;
+				sin.length = len; sin.fixed = true;
+				var theta:Number = 0;
+				for ( var i:uint = 0; i < len; ++i ) {
+					cos[i] = Math.cos(theta);
+					sin[i] = Math.sin(theta);
+					theta += round;
+				}
+				trace(len);
+			}
+			
 			this.name = name;
 		}
 		
@@ -132,27 +150,46 @@ package flare.gui
 				p.setGraphics( graphics );
 		}
 		
+		[Inline] final internal function updateTransform():void
+		{
+			transform.tx = x;
+			transform.ty = y;
+			
+			if ( rotation == 0 ) {
+				transform.a = scaleX;
+				transform.b = 0;
+				transform.c = 0;
+				transform.d = scaleY;
+				if ( center ) {
+					transform.tx -= center.x * scaleX;
+					transform.ty -= center.y * scaleY
+				}
+			} else {
+				var r:Number = (rotation * TO_RAD) % TWO_PI;
+				if ( r < 0 ) r += TWO_PI;
+				const idx:int = r * POW;
+				const a0:Number = cos[idx];
+				const b0:Number = sin[idx];
+				const c0:Number = -b0;
+				const d0:Number = a0;
+				transform.a = a0 * scaleX;
+				transform.b = b0 * scaleX;
+				transform.c = c0 * scaleY;
+				transform.d = d0 * scaleY;
+				if ( center ) {
+					transform.tx -= center.x * transform.a + center.y * transform.c;
+					transform.ty -= center.x * transform.b + center.y * transform.d;
+				}
+			}
+			
+			if ( _parent && _parent.transform )
+				transform.concat( _parent.transform );
+		}
+		
 		public function updateTransforms( includeChildren:Boolean = false ):void
 		{
-			transform.identity();
+			if ( transform ) updateTransform();
 			
-			if ( center ) 
-				transform.translate( -center.x, -center.y );
-				
-			if ( scaleX != 1 || scaleY != 1 )
-				transform.scale( scaleX, scaleY );
-				
-			if ( rotation != 0 )
-				transform.rotate( rotation * TO_RAD );
-			
-			if ( center )
-				transform.translate( center.x + x, center.y + y );
-			else
-				transform.translate( x, y );
-			
-			if ( parent )
-				transform.concat( parent.transform );
-				
 			if ( includeChildren && children ) {
 				var l:int = children.length;
 				for ( var i:int = 0; i < l; i++ ) 
@@ -189,6 +226,8 @@ package flare.gui
 		public function draw():void
 		{
 			if ( !graphics || !visible ) return;
+			
+			if ( transform ) updateTransform();
 			
 			if ( children ) {
 				var length:int = children.length;

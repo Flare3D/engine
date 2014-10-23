@@ -1,5 +1,6 @@
 package flare.gui
 {
+	import flare.core.Pivot3D;
 	/**
 	 * @author Ariel Nehmad
 	 */
@@ -9,14 +10,13 @@ package flare.gui
 		{
 			super( name );
 			
+			transform =  null;
 			graphics = new Graphics2D;
 		}
 		
 		override public function draw():void
 		{
 			if ( !graphics || !visible ) return;
-			
-			updateTransforms( true );
 			
 			graphics.clear();
 			

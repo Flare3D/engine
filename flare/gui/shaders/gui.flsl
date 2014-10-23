@@ -8,11 +8,13 @@ input UV0 uv0;
 
 param WORLD_VIEW_PROJ worldViewProj;
 
-sampler2D texture <mip = 0, wrap = 0>;
+sampler2D texture <mip = 1, wrap = 0>;
 
 output depthCompare = "always";
 output depthWrite = false;
 output cullFace = "none";
+output sourceFactor = "sourceAlpha";
+output destFactor = "oneMinusSourceAlpha";
 
 interpolated float4 color = color0;
 interpolated float2 uv = uv0;
@@ -20,7 +22,9 @@ interpolated float2 uv = uv0;
 output vertex = position.xyzw * worldViewProj;
 
 technique normal {
-	output sourceFactor = "one";
-	output destFactor = "oneMinusSourceAlpha";
+	output fragment = sampler2D( texture, uv );
+}
+
+technique tinted {
 	output fragment = sampler2D( texture, uv ) * color;
 }
