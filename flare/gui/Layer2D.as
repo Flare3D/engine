@@ -1,6 +1,5 @@
 package flare.gui
 {
-	import flare.core.Pivot3D;
 	/**
 	 * @author Ariel Nehmad
 	 */

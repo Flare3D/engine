@@ -167,15 +167,13 @@ package flare.gui
 			} else {
 				var r:Number = (rotation * TO_RAD) % TWO_PI;
 				if ( r < 0 ) r += TWO_PI;
-				const idx:int = r * POW;
-				const a0:Number = cos[idx];
-				const b0:Number = sin[idx];
-				const c0:Number = -b0;
-				const d0:Number = a0;
-				transform.a = a0 * scaleX;
-				transform.b = b0 * scaleX;
-				transform.c = c0 * scaleY;
-				transform.d = d0 * scaleY;
+				const idx:uint = r * POW;
+				const c:Number = cos[idx];
+				const s:Number = sin[idx];
+				transform.a = c * scaleX;
+				transform.b = s * scaleX;
+				transform.c = -s * scaleY;
+				transform.d = c * scaleY;
 				if ( center ) {
 					transform.tx -= center.x * transform.a + center.y * transform.c;
 					transform.ty -= center.x * transform.b + center.y * transform.d;

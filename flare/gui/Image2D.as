@@ -114,29 +114,30 @@ package flare.gui
 		{
 			if ( !graphics || !visible ) return;
 			
-			if ( scrollRect ) {
-				rect.x = scrollRect.x * graphics.transform.a + scrollRect.y * graphics.transform.c + graphics.transform.tx;
-				rect.y = scrollRect.x * graphics.transform.b + scrollRect.y * graphics.transform.d + graphics.transform.ty;
-				rect.width = scrollRect.width * graphics.transform.a + scrollRect.height * graphics.transform.c;
-				rect.height = scrollRect.width * graphics.transform.b + scrollRect.height * graphics.transform.d;
-				graphics.setScrollRect( rect );
-			}
+			//if ( scrollRect ) {
+				//rect.x = scrollRect.x * graphics.transform.a + scrollRect.y * graphics.transform.c + graphics.transform.tx;
+				//rect.y = scrollRect.x * graphics.transform.b + scrollRect.y * graphics.transform.d + graphics.transform.ty;
+				//rect.width = scrollRect.width * graphics.transform.a + scrollRect.height * graphics.transform.c;
+				//rect.height = scrollRect.width * graphics.transform.b + scrollRect.height * graphics.transform.d;
+				//graphics.setScrollRect( rect );
+			//}
 			
 			updateTransform();
 			
-			graphics.beginTextureFill( _texture, tint );
+			//graphics.beginTextureFill( _texture, tint );
+			
 			if ( _frame ) 
 				graphics.drawImage( _frame.offset.x, _frame.offset.y, _frame.width, _frame.height, uv, transform );
 			else
 				graphics.drawImage( 0, 0, width, height, uv, transform );
 			
-			if ( children ) {
-				var length:int = children.length;
-				for ( var i:int = 0; i < length; i++ ) children[i].draw()
-			}			
+			//if ( children ) {
+				//var length:int = children.length;
+				//for ( var i:int = 0; i < length; i++ ) children[i].draw()
+			//}			
 			
-			if ( scrollRect )
-				graphics.setScrollRect( null );
+			//if ( scrollRect )
+				//graphics.setScrollRect( null );
 		}
 	}
 }

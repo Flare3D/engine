@@ -37,7 +37,7 @@ package flare.gui
 		private var _texture:Texture3D;
 		private var _dirty:Boolean = true;
 		
-		private var _vertexColors:Boolean = true;
+		private var _vertexColors:Boolean = false;
 		private var _red:Number = 1;
 		private var _green:Number = 1;
 		private var _blue:Number = 1;
@@ -146,6 +146,83 @@ package flare.gui
 		public function drawFrame( x:Number, y:Number, frame:TextureFrame, transform:Matrix = null ):void
 		{
 			drawImage( x, y, frame.width, frame.height, frame.uv, transform );
+		}
+		
+		public function drawImages( images:Vector.<Image2D>, uvsRect:Rectangle = null ):void
+		{
+			if ( _quads ) flush();
+			
+			_reupload = true;
+			
+			var len:int = images.length;
+			var index:int = 0;
+			var bytes:ByteArray = _surface.vertexBytes;
+			var size:int = _surface.sizePerVertex;
+			
+			if ( _vertices <= len * 4 ) expand( 65000 )
+			
+			// uv's part.
+			uvsRect ||= Graphics2D.uvRect;
+			var u0:Number = uvsRect.x;
+			var v0:Number = uvsRect.y;
+			var u1:Number = uvsRect.width + u0;
+			var v1:Number = uvsRect.height + v0;
+			
+			for ( var i:int = 0; i < len; i++ ) {
+				
+				var image:Image2D = images[i];
+				
+				image.updateTransform();
+				
+				var transform:Matrix = image.transform;
+				var x:Number = 0;
+				var y:Number = 0;
+				var w:Number = image.width;
+				var h:Number = image.height;
+				var rx:Number = transform.a;
+				var ry:Number = transform.b;
+				var ux:Number = transform.c;
+				var uy:Number = transform.d;
+				var tx:Number = transform.tx;
+				var ty:Number = transform.ty;
+				
+				var vx:Number;
+				var vy:Number;
+				index = _quads * size * 16
+				vx = x * rx + y * ux + tx;
+				vy = x * ry + y * uy + ty;
+				sf32( vx, index );
+				sf32( vy, index + 4 );
+				sf32( u0, index + 8 );
+				sf32( v0, index + 12 );
+				index += size * 4;
+				vx = w * rx + y * ux + tx;
+				vy = w * ry + y * uy + ty;
+				sf32( vx, index );
+				sf32( vy, index + 4 );
+				sf32( u1, index + 8 );
+				sf32( v0, index + 12 );
+				index += size * 4;
+				vx = x * rx + h * ux + tx;
+				vy = x * ry + h * uy + ty;
+				sf32( vx, index );
+				sf32( vy, index + 4 );
+				sf32( u0, index + 8 );
+				sf32( v1, index + 12 );
+				index += size * 4;
+				vx = w * rx + h * ux + tx;
+				vy = w * ry + h * uy + ty;
+				sf32( vx, index );
+				sf32( vy, index + 4 );
+				sf32( u1, index + 8 );
+				sf32( v1, index + 12 );
+				
+				_quads++;
+				
+				if ( _quads >= 16250 ) { flush(); _quads = 0; }
+			}
+			
+			if ( _quads > 0 ) flush();
 		}
 		
 		public function drawImage( x:Number, y:Number, w:Number, h:Number, uvsRect:Rectangle = null, transform:Matrix = null ):void
